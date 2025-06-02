@@ -1,1 +1,1 @@
-# telegram-diary-bot
+# Diary Bot
