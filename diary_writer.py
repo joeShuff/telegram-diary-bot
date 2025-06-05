@@ -5,7 +5,7 @@ from config import OPENAI_API_KEY
 
 openai.api_key = OPENAI_API_KEY
 
-STYLE_DIR = os.getcwd() + "/config"
+STYLE_DIR = os.getcwd() + "/config/styles"
 
 
 def generate_diary_entry(raw_text: str, user_id: int) -> str:
