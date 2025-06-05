@@ -18,8 +18,8 @@ A Telegram bot that helps you keep a voice-based daily diary — transcribed, st
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/telegram-voice-diary-bot.git
-cd telegram-voice-diary-bot
+git clone https://github.com/joeShuff/telegram-diary-bot.git
+cd telegram-diary-bot
 ```
 
 ### 2. Set up environment variables
@@ -27,7 +27,7 @@ cd telegram-voice-diary-bot
 Create a `.env` file or export these in your environment:
 
 ```env
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_TOKEN=your_telegram_bot_token
 OPENAI_API_KEY=your_openai_api_key
 ```
 
