@@ -10,7 +10,7 @@ from scheduler import save_reminder, schedule_reminders
 from transcribe import transcribe_voice
 
 AUDIO_DIR = CONFIG_PATH + "/audio"
-
+TRANSCRIPTION_DIR = CONFIG_PATH + "/transcriptions"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hey! Send me a voice note when you're ready.")
@@ -25,15 +25,28 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.datetime.now()
     timestamp = int(now.timestamp())
     formatted_date = now.strftime("%d_%m_%Y_%H_%M")
-    filename = f"{formatted_date}_{timestamp}.ogg"
-    path = os.path.join(AUDIO_DIR, str(user_id), filename)
+
+    audio_filename = f"{formatted_date}_{timestamp}.ogg"
+    transcription_filename = f"{formatted_date}_{timestamp}.txt"
+
+    path = os.path.join(AUDIO_DIR, str(user_id), audio_filename)
+    transcription_path = os.path.join(TRANSCRIPTION_DIR, str(user_id), transcription_filename)
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    os.makedirs(os.path.dirname(transcription_path), exist_ok=True)
 
     await file.download_to_drive(path)
 
     await update.message.reply_text("Transcribing...")
     text = transcribe_voice(path)
+
+    # Save transcription to file
+    with open(transcription_path, "w", encoding="utf-8") as f:
+        f.write(text)
+
+    # Send the transcription text file
+    await update.message.reply_document(document=open(transcription_path, "rb"), filename=transcription_filename,
+                                        caption="📝 Here's your transcription")
 
     await update.message.reply_text("Converting to diary entry...")
     user_id = update.effective_user.id

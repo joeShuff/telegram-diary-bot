@@ -2,18 +2,19 @@ import os
 
 import openai
 from config import OPENAI_API_KEY
-from const import CONFIG_PATH
 
 openai.api_key = OPENAI_API_KEY
+
+STYLE_DIR = os.getcwd() + "/config"
 
 
 def generate_diary_entry(raw_text: str, user_id: int) -> str:
     user_style = get_user_style(user_id)
 
     system_prompt = (
-        f"You are a reflective diary-writing assistant. The user's diary style is:\n\n"
+        f"You are a reflective diary-writing assistant. Instructions from the user about how to write a diary entry in their style is:\n\n"
         f"{user_style}\n\n"
-        f"Convert the following transcription into a diary entry that matches the tone and language of the example above."
+        f"Convert the following transcription into a diary entry that matches the tone and language and rules set out by the user."
     )
 
     response = openai.ChatCompletion.create(
@@ -27,14 +28,14 @@ def generate_diary_entry(raw_text: str, user_id: int) -> str:
 
 
 def set_user_style(user_id: int, style: str):
-    os.makedirs(CONFIG_PATH, exist_ok=True)
-    path = os.path.join(CONFIG_PATH, f"user_{user_id}_style.txt")
+    os.makedirs(STYLE_DIR, exist_ok=True)
+    path = os.path.join(STYLE_DIR, f"user_{user_id}_style.txt")
     with open(path, "w", encoding="utf-8") as f:
         f.write(style)
 
 
 def get_user_style(user_id: int) -> str:
-    path = os.path.join(CONFIG_PATH, f"user_{user_id}_style.txt")
+    path = os.path.join(STYLE_DIR, f"user_{user_id}_style.txt")
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
             return f.read()
