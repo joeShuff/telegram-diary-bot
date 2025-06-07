@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from const import CONFIG_PATH
-from diary_writer import generate_diary_entry, set_user_style
+from diary_writer import generate_diary_entry, set_user_style, get_user_style
 from scheduler import save_reminder, schedule_reminders
 from transcribe import transcribe_voice
 
@@ -95,3 +95,11 @@ async def setreminder(update: Update, context: ContextTypes.DEFAULT_TYPE):
     schedule_reminders(context.application.job_queue.scheduler, context.bot)
 
     await update.message.reply_text(f"✅ Your daily reminder is set for {time_str}.")
+
+
+async def getstyle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+
+    style = get_user_style(user_id)
+
+    await update.message.reply_text(f"{style}")

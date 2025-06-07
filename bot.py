@@ -6,7 +6,7 @@ from telegram import BotCommand
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from config import TELEGRAM_TOKEN
-from handlers import start, handle_voice, setstyle, setreminder
+from handlers import start, handle_voice, setstyle, setreminder, getstyle
 from scheduler import schedule_reminders
 
 
@@ -14,7 +14,8 @@ async def set_bot_commands(application):
     commands = [
         BotCommand("start", "Start the bot"),
         BotCommand("setstyle", "Set your diary style"),
-        BotCommand("setreminder", "Set daily reminder time")
+        BotCommand("setreminder", "Set daily reminder time"),
+        BotCommand("getstyle", "Retrieve the style you have set for the bot")
     ]
     await application.bot.set_my_commands(commands)
 
@@ -28,6 +29,7 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.VOICE, handle_voice))
 app.add_handler(CommandHandler("setstyle", setstyle))
 app.add_handler(CommandHandler("setreminder", setreminder))
+app.add_handler(CommandHandler("getstyle", getstyle))
 
 system_timezone = datetime.now().astimezone().tzinfo
 scheduler = AsyncIOScheduler(timezone=system_timezone)
