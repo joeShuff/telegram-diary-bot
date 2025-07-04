@@ -1,10 +1,12 @@
-import openai
-from config import OPENAI_API_KEY
+from faster_whisper import WhisperModel
 
-openai.api_key = OPENAI_API_KEY
+# Load once globally
+model = WhisperModel("base", device="cpu", compute_type="int8")  # You can use "medium", "large", etc.
 
 
-def transcribe_voice(filepath: str) -> str:
-    with open(filepath, "rb") as audio_file:
-        transcript = openai.Audio.transcribe("whisper-1", audio_file)
-    return transcript["text"]
+def transcribe_voice(file_path: str) -> str:
+    segments, _ = model.transcribe(file_path)
+    result = []
+    for segment in segments:
+        result.append(segment.text)
+    return " ".join(result)
