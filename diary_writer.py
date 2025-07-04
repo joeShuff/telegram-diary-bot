@@ -1,9 +1,7 @@
 import os
+from langchain.chat_models import init_chat_model
 
-import openai
-from config import OPENAI_API_KEY
-
-openai.api_key = OPENAI_API_KEY
+import config
 
 STYLE_DIR = os.getcwd() + "/config/styles"
 
@@ -11,20 +9,17 @@ STYLE_DIR = os.getcwd() + "/config/styles"
 def generate_diary_entry(raw_text: str, user_id: int) -> str:
     user_style = get_user_style(user_id)
 
-    system_prompt = (
+    prompt = (
         f"You are a reflective diary-writing assistant. Instructions from the user about how to write a diary entry in their style is:\n\n"
         f"{user_style}\n\n"
-        f"Convert the following transcription into a diary entry that matches the tone and language and rules set out by the user."
+        f"Convert the following transcription into a diary entry that matches the tone and language and rules set out by the user. RESPOND ONLY WITH THE STYLED DIARY ENTRY.\n\n"
+        f"{raw_text}"
     )
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": raw_text}
-        ]
-    )
-    return response.choices[0].message.content.strip()
+    model = init_chat_model(model=config.AI_MODEL, model_provider=config.AI_PROVIDER)
+
+    response = model.invoke(prompt)
+    return response.content
 
 
 def set_user_style(user_id: int, style: str):
