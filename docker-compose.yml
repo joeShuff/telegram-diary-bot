@@ -2,7 +2,8 @@ version: "3.8"
 
 services:
   diary-bot:
-    container_name: denizenn/telegram-diary-bot:latest
+    container_name: "TelegramBot"
+    image: denizenn/telegram-diary-bot:latest
     restart: always
     environment:
       - TELEGRAM_BOT_TOKEN=your-telegram-bot-token
