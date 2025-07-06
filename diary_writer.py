@@ -10,13 +10,15 @@ def generate_diary_entry(raw_text: str, user_id: int) -> str:
     user_style = get_user_style(user_id)
 
     prompt = (
-        f"You are a reflective diary-writing assistant. Instructions from the user about how to write a diary entry in their style is:\n\n"
-        f"{user_style}\n\n"
-        f"Convert the following transcription into a diary entry that matches the tone and language and rules set out by the user. RESPOND ONLY WITH THE STYLED DIARY ENTRY.\n\n"
-        f"{raw_text}"
+        f'You are a reflective diary-writing assistant. Instructions from the user about how to write a diary entry '
+        f'in their style is:\n\n '
+        f'{user_style}\n\n'
+        f'Convert the following transcription into a diary entry that matches the tone and language and rules set out '
+        f'by the user. RESPOND ONLY WITH THE STYLED DIARY ENTRY.\n\n '
+        f'{raw_text}'
     )
 
-    model = init_chat_model(model=config.AI_MODEL, model_provider=config.AI_PROVIDER)
+    model = init_chat_model(model=config.AI_MODEL, model_provider=config.AI_PROVIDER, temperature=config.AI_TEMPERATURE)
 
     response = model.invoke(prompt)
     return response.content

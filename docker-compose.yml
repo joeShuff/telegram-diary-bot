@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  diary-bot:
+    container_name: denizenn/telegram-diary-bot:latest
+    restart: always
+    environment:
+      - TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+      - AI_PROVIDER=your-ai-provider # See README
+      - AI_MODEL=your-ai-model # See your providers models
+      - AI_TEMPERATURE=0.7 # Optional: Default 0.7
+      - GOOGLE_API_KEY=gemini-api-key # Optional: If using gemini
+      - OPENAI_API_KEY=openai-api-key # Optional: If using OpenAI
+      - TZ=Europe/London # Use to ensure scheduled message is correct
+    volumes:
+      - /path/to/your/config:/app/config
