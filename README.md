@@ -13,7 +13,18 @@ A Telegram bot that helps you keep a voice-based daily diary — transcribed, st
 
 ![Voice Diary Example](art/example.gif)
 
-## 🚀 Getting Started
+## Docker Get Started
+
+### 1. Compose
+Download the `docker-compose.yml` file or copy the contents from the raw file [here](https://raw.githubusercontent.com/joeShuff/telegram-diary-bot/main/docker-compose.yml)
+
+### 2. Populate environment variables
+Consult the **Environment Variables** table to see what variables are and aren't needed.
+
+### 3. Run
+Run the container and test your bot!
+
+## Local Get Started
 
 ### 1. Clone the repository
 
@@ -24,12 +35,7 @@ cd telegram-diary-bot
 
 ### 2. Set up environment variables
 
-Create a `.env` file or export these in your environment:
-
-```env
-TELEGRAM_TOKEN=your_telegram_bot_token
-OPENAI_API_KEY=your_openai_api_key
-```
+See Environment Variables section below
 
 ### 3. Install dependencies
 
@@ -50,6 +56,19 @@ docker build -t diary-bot .
 docker run --env-file .env diary-bot
 ```
 
+## Environment Variables
+See table for an explanation of what environment variables are needed/supported and their use.
+
+| Variable Name    | Description                                                                                                                                | Required                  | Example Value                |
+|------------------|--------------------------------------------------------------------------------------------------------------------------------------------|---------------------------|------------------------------|
+| `TELEGRAM_TOKEN` | The token for your Telegram bot. Get it from [@BotFather](https://t.me/BotFather)                                                          | ✅ Yes                     | `123456:ABC-DEF1234ghIkl...` |
+| `AI_PROVIDER`    | Which AI model to use: `openai` or `google_genai`. See [langchain](https://python.langchain.com/docs/integrations/providers/) for details. | ✅ Yes                     | `openai`                     |
+| `AI_MODEL`       | The AI model you want to use. See your selected provider for names.                                                                        | ✅ Yes                     | `gpt-4.1-nano`               |
+| `OPENAI_API_KEY` | Your OpenAI API key for diary stylization (used with GPT)                                                                                  | ⚠️ Yes (if using OpenAI)  | `sk-xxxxxxxxxxxxxxxxxxxxxx`  |
+| `GOOGLE_API_KEY` | Your Google API key if using Gemini (via LangChain)                                                                                        | ⚠️ Yes (if using Gemini)  | `AIzaSyD-xxxxxxxxxxxxxxxxx`  |
+| `AI_TEMPERATURE` | Controls creativity of diary output (0.0 = predictable, 1.0 = creative)                                                                    | ❌ Optional (default: 0.7) | `0.7`                        |
+
+
 ## 📁 Project Structure
 
 ```
@@ -65,6 +84,7 @@ project-root/
 ## 💬 Bot Commands
 
 - `/setstyle <text>` – Set your diary writing style using a sample entry
+- `/getstyle` - Returns a users style to confirm your style
 - `/setreminder <HH:MM>` – Set your daily reminder time (bot's local time)
 - `/start` – Starter command
 
