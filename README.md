@@ -16,7 +16,7 @@ A Telegram bot that helps you keep a voice-based daily diary — transcribed, st
 ## Docker Get Started
 
 ### 1. Compose
-Download the `docker_compose.yml` file or copy the contents from the raw file [here](https://raw.githubusercontent.com/joeShuff/telegram-diary-bot/main/docker-compose.yml)
+Download the `docker-compose.yml` file or copy the contents from the raw file [here](https://raw.githubusercontent.com/joeShuff/telegram-diary-bot/main/docker-compose.yml)
 
 ### 2. Populate environment variables
 Consult the **Environment Variables** table to see what variables are and aren't needed.
