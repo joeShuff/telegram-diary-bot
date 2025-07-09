@@ -4,12 +4,11 @@ import os
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from const import CONFIG_PATH
-from diary_writer import generate_diary_entry, set_user_style, get_user_style
+from const import AUDIO_DIR
+from diary_writer import set_user_style, get_user_style
 from processes import audio_file_to_diary
 from scheduler import save_reminder, schedule_reminders
 
-AUDIO_DIR = CONFIG_PATH + "/audio"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hey! Send me a voice note when you're ready.")
@@ -32,7 +31,7 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await file.download_to_drive(path)
 
-    await audio_file_to_diary(update, path)
+    await audio_file_to_diary(update.message, path)
 
 
 async def setstyle(update: Update, context: ContextTypes.DEFAULT_TYPE):
