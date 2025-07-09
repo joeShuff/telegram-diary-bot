@@ -1,16 +1,22 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from commands.process_audio import handle_audio_callback
-from commands.process_transcription import handle_transcription_callback
+from commands.process_audio import handle_audio_callback, send_audio_buttons
+from commands.process_transcription import handle_transcription_callback, send_transcription_buttons
 
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     data = query.data
-    prefix, filename = data.split("|", 1)
+    prefix, extra = data.split("|", 1)
 
-    if prefix == "process_audio":
+    if prefix == "audio_process":
         await handle_audio_callback(update, context)
-    elif prefix == "process_transcription":
+    elif prefix == "transcription_process":
         await handle_transcription_callback(update, context)
+    elif prefix == "audio_page":
+        page = int(extra)
+        await send_audio_buttons(query, query.from_user.id, page)
+    elif prefix == "transcription_page":
+        page = int(extra)
+        await send_transcription_buttons(query, query.from_user.id, page)
