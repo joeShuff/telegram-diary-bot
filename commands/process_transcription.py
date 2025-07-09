@@ -32,9 +32,6 @@ async def handle_transcription_callback(update: Update, context: ContextTypes.DE
     data = query.data
     prefix, filename = data.split("|", 1)
 
-    if prefix != "process_transcription":
-        return  # Ignore unrelated buttons
-
     path = os.path.join(TRANSCRIPTION_DIR, user_id, filename)
     if not os.path.exists(path):
         await query.edit_message_text("❌ File not found.")

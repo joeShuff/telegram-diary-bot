@@ -11,8 +11,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prefix, extra = data.split("|", 1)
 
     if prefix == "audio_process":
+        await query.edit_message_text(f"🎧 Processing audio: `{extra}`", parse_mode="Markdown")
+
         await handle_audio_callback(update, context)
     elif prefix == "transcription_process":
+        await query.edit_message_text(f"📄 Processing transcription: `{extra}`", parse_mode="Markdown")
+
         await handle_transcription_callback(update, context)
     elif prefix == "audio_page":
         page = int(extra)
