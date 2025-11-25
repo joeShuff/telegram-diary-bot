@@ -37,4 +37,4 @@ async def handle_transcription_callback(update: Update, context: ContextTypes.DE
         await query.edit_message_text("❌ File not found.")
         return
 
-    await transcribed_file_to_diary(query.message, path)
+    await transcribed_file_to_diary(query.message, audio_path=None, transcription_path=path)

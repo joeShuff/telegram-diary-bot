@@ -2,6 +2,7 @@ import inspect
 import json
 from pathlib import Path
 
+from telegram import Message
 from telegram.ext import Application
 
 import importlib
@@ -21,7 +22,7 @@ class BasePlugin:
         """
         raise NotImplementedError()
 
-    def on_entry(self, entry_text, transcription_file, voice_note_file, telegram):
+    def on_entry(self, source_message: Message, transcription_path, voice_note_path, diary_entry: str):
         raise NotImplementedError
 
     def save_config(self, user_id: int, data: any):
@@ -61,13 +62,13 @@ def load_plugins(application: Application):
                     print(f"[PluginCore] Disabled plugin: {plugin_id}")
 
 
-def run_plugins(entry_text, transcription_file, voice_note_file, telegram):
+async def run_plugins(source_message, transcription_path, voice_note_path, diary_entry):
     global plugins
 
     for plugin in plugins:
         try:
             print(f"[PluginCore] Running plugin {plugin.get_id()}")
-            plugin.on_entry(entry_text, transcription_file, voice_note_file, telegram)
+            await plugin.on_entry(source_message, transcription_path, voice_note_path, diary_entry)
         except Exception as e:
             print(f"[PluginCore] Plugin {plugin.get_id()} failed: {e}")
 

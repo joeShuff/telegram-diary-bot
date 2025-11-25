@@ -1,7 +1,9 @@
 import os
+from typing import Optional
 
 from telegram import Message
 
+import plugin_core
 from const import TRANSCRIPTION_DIR
 from diary_writer import generate_diary_entry
 from paths import get_transcription_filename
@@ -25,13 +27,14 @@ async def audio_file_to_diary(telegram_message: Message, filepath: str) -> str:
 
     # Send the transcription text file
     await telegram_message.reply_document(document=open(transcription_path, "rb"),
-                                                  filename=transcription_filename,
-                                                  caption="📝 Here's your transcription")
+                                          filename=transcription_filename,
+                                          caption="📝 Here's your transcription")
 
-    await transcribed_file_to_diary(telegram_message, transcription_path)
+    await transcribed_file_to_diary(telegram_message, audio_path=filepath, transcription_path=transcription_path)
 
 
-async def transcribed_file_to_diary(telegram_message: Message, transcription_path: str) -> str:
+async def transcribed_file_to_diary(telegram_message: Message, audio_path: Optional[str],
+                                    transcription_path: str) -> str:
     with open(transcription_path, "r", encoding="utf-8") as f:
         transcribed_text = f.read()
 
@@ -39,5 +42,7 @@ async def transcribed_file_to_diary(telegram_message: Message, transcription_pat
     user_id = telegram_message.chat.id
     diary = generate_diary_entry(transcribed_text, user_id)
 
-    await telegram_message.reply_text(f"📔 Your entry:")
-    await telegram_message.reply_text(diary)
+    await plugin_core.run_plugins(source_message=telegram_message,
+                                  voice_note_path=audio_path,
+                                  transcription_path=transcription_path,
+                                  diary_entry=diary)

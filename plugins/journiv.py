@@ -1,11 +1,11 @@
-from dataclasses import dataclass, asdict
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass, asdict, fields
+from typing import Optional, Dict, Any
 
-import aiohttp
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler
 
 from plugin_core import BasePlugin
+from plugins.journiv_api import load_journals, journiv_login, upload_journiv_entry, journiv_refresh
 
 
 @dataclass
@@ -23,6 +23,13 @@ class JournivConfig:
     def from_dict(cls, data: Dict[str, Any]):
         """Create a dataclass instance from stored dict."""
         return cls(**data)
+
+    def is_valid(self) -> bool:
+        for f in fields(self):
+            value = getattr(self, f.name)
+            if not isinstance(value, str) or not value.strip():
+                return False
+        return True
 
 
 class JournivPlugin(BasePlugin):
@@ -43,10 +50,63 @@ class JournivPlugin(BasePlugin):
     def get_id(self):
         return "journiv"
 
-    def on_entry(self, entry_text, transcription_file, voice_note_file, telegram):
-        telegram.send_message("Processing with Journiv plugin…")
-        # JOURNIV API LOGIC HERE
-        telegram.send_message("Entry saved to Journiv!")
+    async def on_entry(self, source_message: Message, transcription_path, voice_note_path, diary_entry: str):
+        stored_data = self.load_config(source_message.chat.id)
+
+        if not stored_data.is_valid():
+            print(f"Skipping journiv for {source_message.chat.id} because no valid config")
+            return
+
+        await source_message.reply_text("Processing with Journiv plugin…")
+
+        try:
+            await self.refresh_token(source_message.chat.id)
+
+            uploaded_entry = await upload_journiv_entry(
+                base_url=stored_data.base_url,
+                access_token=stored_data.access_token,
+                journal_id=stored_data.journal_id,
+                content=diary_entry
+            )
+
+            entry_id = uploaded_entry["id"]
+            journal_id = uploaded_entry["journal_id"]
+
+            entry_url = f"{stored_data.base_url}/#/entries/{entry_id}/edit?journalId={journal_id}"
+            keyboard = [
+                [InlineKeyboardButton("Open Entry ↗️", url=entry_url)]
+            ]
+            markup = InlineKeyboardMarkup(keyboard)
+
+            await source_message.reply_text(
+                text="✨ *Entry created!* Tap below to view or edit it:",
+                reply_markup=markup,
+                parse_mode="Markdown",
+            )
+
+        except Exception as e:
+            await source_message.reply_text(f"Upload failed:\n{e}")
+
+    async def refresh_token(self, user_id):
+        """
+        This function loads the users config, performs the token refresh then stores the new tokens in the config
+        :param user_id: User ID to perform the refresh for
+        """
+        stored_config = self.load_config(user_id)
+
+        new_data = await journiv_refresh(
+            base_url=stored_config.base_url,
+            refresh_token=stored_config.refresh_token
+        )
+
+        new_config = JournivConfig(
+            base_url=stored_config.base_url,
+            access_token=new_data["access_token"],
+            refresh_token=stored_config.refresh_token,  # No new refresh token issued
+            journal_id=stored_config.journal_id
+        )
+
+        self.save_config(user_id, new_config.to_dict())
 
     """
     Setup Functions
@@ -66,7 +126,7 @@ class JournivPlugin(BasePlugin):
 
         # Validate API
         try:
-            credentials = await self.journiv_login(base_url, email, password)
+            credentials = await journiv_login(base_url, email, password)
         except Exception as e:
             return await update.message.reply_text(str(e))
 
@@ -83,7 +143,7 @@ class JournivPlugin(BasePlugin):
         )
 
         try:
-            journals = await self.load_journals(update.effective_user.id)
+            journals = await load_journals(config.base_url, config.access_token)
         except Exception as e:
             return await update.message.reply_text(str(e))
 
@@ -134,93 +194,3 @@ class JournivPlugin(BasePlugin):
         )
 
         await query.edit_message_text(f"Journiv setup complete for journal {journal_name}!")
-
-    """
-    Helper Functions
-    """
-
-    async def load_journals(self, user_id: int) -> List[Dict]:
-        """
-        Fetch the list of journals for the current user from Journiv.
-
-        Args:
-            user_id (str): ID of the user to load journals for
-
-        Returns:
-            List[Dict]: List of journal objects, e.g. [{"id": "123", "name": "Work"}, ...]
-
-        Raises:
-            RuntimeError: If the request fails or returns unexpected data
-        """
-        config = self.load_config(user_id)
-        base_url = config.base_url
-
-        url = f"{base_url.rstrip('/')}/api/v1/journals/?include_archived=false"
-
-        headers = {
-            "Authorization": f"Bearer {config.access_token}",
-            "Accept": "application/json"
-        }
-
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(url, headers=headers) as resp:
-                    if resp.status == 401:
-                        raise ValueError("Invalid or expired access token.")
-                    if resp.status >= 400:
-                        text = await resp.text()
-                        raise RuntimeError(f"Failed to fetch journals: {resp.status}, {text}")
-
-                    data = await resp.json()
-
-            except aiohttp.ClientError as e:
-                raise RuntimeError(f"Network error contacting Journiv: {e}")
-
-        # Ensure data is a list
-        if not isinstance(data, list):
-            raise RuntimeError(f"Unexpected response from Journiv API: {data}")
-
-        return data
-
-    async def journiv_login(self, base_url: str, email: str, password: str):
-        """
-        Attempt to log into Journiv and return tokens.
-        Raises ValueError on invalid credentials.
-        Raises RuntimeError on unexpected server errors.
-        """
-
-        url = f"{base_url.rstrip('/')}/api/v1/auth/login"
-        payload = {
-            "email": email,
-            "password": password
-        }
-
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(url, json=payload) as resp:
-                    # If journiv returns 401 / 403 on invalid login:
-                    if resp.status in (401, 403):
-                        raise ValueError("Invalid email or password.")
-
-                    if resp.status >= 500:
-                        raise RuntimeError("Journiv server error.")
-
-                    if resp.status != 200:
-                        text = await resp.text()
-                        raise RuntimeError(
-                            f"Unexpected response from Journiv ({resp.status}): {text}"
-                        )
-
-                    data = await resp.json()
-
-            except aiohttp.ClientError as e:
-                raise RuntimeError(f"Network error contacting Journiv: {e}")
-
-        # Validate JSON structure
-        if "access_token" not in data or "refresh_token" not in data:
-            raise RuntimeError("Journiv login succeeded but tokens are missing.")
-
-        return {
-            "access_token": data["access_token"],
-            "refresh_token": data["refresh_token"]
-        }
