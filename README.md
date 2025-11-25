@@ -115,6 +115,8 @@ Plugin ID: `journiv`
 
 [Journiv](https://journiv.com/) is a self-hosted diary system. This plugin can send your entries to a specified Journiv Journal and also attach the voice note.
 
+Run `/journivsetup` to setup your connection to Journiv (user specific)
+
 ## Developing more plugins
 Right now the documentation is the existing plugins. This area might get more info in the future.
 
