@@ -13,5 +13,6 @@ services:
       - GOOGLE_API_KEY=gemini-api-key # Optional: If using gemini
       - OPENAI_API_KEY=openai-api-key # Optional: If using OpenAI
       - TZ=Europe/London # Use to ensure scheduled message is correct
+      - ENABLED_PLUGINS=diary_feedback # IDs of plugins to enable
     volumes:
       - /path/to/your/config:/app/config

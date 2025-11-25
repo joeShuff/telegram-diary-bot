@@ -5,7 +5,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import BotCommand
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 
-from callback_handler import handle_callback
+import plugin_core
+from callback_handler import handle_audio_process_callback, handle_transcription_process_callback, \
+    handle_audio_page_callback, handle_transcription_page_callback
 from commands.process_audio import process_audio
 from commands.process_transcription import process_transcription
 from config import TELEGRAM_TOKEN
@@ -36,9 +38,13 @@ app.add_handler(CommandHandler("setstyle", setstyle))
 app.add_handler(CommandHandler("setreminder", setreminder))
 app.add_handler(CommandHandler("getstyle", getstyle))
 app.add_handler(CommandHandler("processaudio", process_audio))
-app.add_handler(CallbackQueryHandler(handle_callback))
+app.add_handler(CallbackQueryHandler(handle_audio_process_callback, pattern="^audio_process"))
+app.add_handler(CallbackQueryHandler(handle_transcription_process_callback, pattern="^transcription_process"))
+app.add_handler(CallbackQueryHandler(handle_audio_page_callback, pattern="^audio_page"))
+app.add_handler(CallbackQueryHandler(handle_transcription_page_callback, pattern="^transcription_page"))
 app.add_handler(CommandHandler("processtranscription", process_transcription))
 
+plugin_core.load_plugins(app)
 
 system_timezone = datetime.now().astimezone().tzinfo
 scheduler = AsyncIOScheduler(timezone=system_timezone)
