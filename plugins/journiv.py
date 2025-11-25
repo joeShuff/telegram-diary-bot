@@ -5,7 +5,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler
 
 from plugin_core import BasePlugin
-from plugins.journiv_api import load_journals, journiv_login, upload_journiv_entry, journiv_refresh
+from plugins.journiv_api import load_journals, journiv_login, upload_journiv_entry, journiv_refresh, upload_media
 
 
 @dataclass
@@ -71,6 +71,13 @@ class JournivPlugin(BasePlugin):
 
             entry_id = uploaded_entry["id"]
             journal_id = uploaded_entry["journal_id"]
+
+            await upload_media(
+                base_url=stored_data.base_url,
+                access_token=stored_data.access_token,
+                file_path=voice_note_path,
+                entry_id=entry_id
+            )
 
             entry_url = f"{stored_data.base_url}/#/entries/{entry_id}/edit?journalId={journal_id}"
             keyboard = [

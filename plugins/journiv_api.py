@@ -193,3 +193,43 @@ async def journiv_login(base_url: str, email: str, password: str):
         "access_token": data["access_token"],
         "refresh_token": data["refresh_token"]
     }
+
+
+async def upload_media(
+    base_url: str,
+    access_token: str,
+    file_path: str,
+    entry_id: Optional[str] = None,
+    alt_text: Optional[str] = None
+) -> dict:
+    """
+    Asynchronously upload a media file to Journiv using aiohttp.
+    """
+
+    url = f"{base_url.rstrip('/')}/api/v1/media/upload"
+
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+
+    data = {}
+    if entry_id is not None:
+        data["entry_id"] = entry_id
+    if alt_text is not None:
+        data["alt_text"] = alt_text
+
+    async with aiohttp.ClientSession() as session:
+        with open(file_path, "rb") as f:
+            form = aiohttp.FormData()
+            form.add_field(
+                name="file",
+                value=f,
+                filename=file_path.split("/")[-1],
+                content_type="application/octet-stream"
+            )
+            for k, v in data.items():
+                form.add_field(k, v)
+
+            async with session.post(url, headers=headers, data=form) as resp:
+                resp.raise_for_status()
+                return await resp.json()
