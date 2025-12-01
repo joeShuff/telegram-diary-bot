@@ -61,6 +61,7 @@ class JournivPlugin(BasePlugin):
 
         try:
             await self.refresh_token(source_message.chat.id)
+            stored_data = self.load_config(source_message.chat.id)
 
             uploaded_entry = await upload_journiv_entry(
                 base_url=stored_data.base_url,
