@@ -4,6 +4,7 @@ from typing import Optional
 from telegram import Message
 
 import plugin_core
+import user_config
 from const import TRANSCRIPTION_DIR
 from diary_writer import generate_diary_entry
 from paths import get_transcription_filename
@@ -37,10 +38,15 @@ async def transcribed_file_to_diary(telegram_message: Message, audio_path: Optio
                                     transcription_path: str) -> str:
     with open(transcription_path, "r", encoding="utf-8") as f:
         transcribed_text = f.read()
-
-    await telegram_message.reply_text("Converting to diary entry...")
     user_id = telegram_message.chat.id
-    diary = generate_diary_entry(transcribed_text, user_id)
+
+    config = user_config.load_user_config(user_id)
+
+    if config.ai_enabled:
+        await telegram_message.reply_text("Using AI to stylise diary entry...")
+        diary = generate_diary_entry(transcribed_text, user_id)
+    else:
+        diary = transcribed_text
 
     await plugin_core.run_plugins(source_message=telegram_message,
                                   voice_note_path=audio_path,

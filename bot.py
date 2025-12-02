@@ -6,6 +6,7 @@ from telegram import BotCommand
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 
 import plugin_core
+from ai_controller import enable_ai, disable_ai
 from callback_handler import handle_audio_process_callback, handle_transcription_process_callback, \
     handle_audio_page_callback, handle_transcription_page_callback
 from commands.process_audio import process_audio
@@ -22,8 +23,14 @@ async def set_bot_commands(application):
         BotCommand("setreminder", "Set daily reminder time"),
         BotCommand("getstyle", "Retrieve the style you have set for the bot"),
         BotCommand("processaudio", "Process an already send audio file. Used as backup"),
-        BotCommand("processtranscription", "Process an already existing transcription. Used as backup")
+        BotCommand("processtranscription", "Process an already existing transcription. Used as backup"),
+        BotCommand("disableai", "Disable the AI processing of your entries"),
+        BotCommand("enableai", "Enable the AI processing of your entries"),
     ]
+
+    for command in plugin_core.get_loaded_plugin_commands():
+        commands.append(command)
+
     await application.bot.set_my_commands(commands)
 
 
@@ -43,6 +50,8 @@ app.add_handler(CallbackQueryHandler(handle_transcription_process_callback, patt
 app.add_handler(CallbackQueryHandler(handle_audio_page_callback, pattern="^audio_page"))
 app.add_handler(CallbackQueryHandler(handle_transcription_page_callback, pattern="^transcription_page"))
 app.add_handler(CommandHandler("processtranscription", process_transcription))
+app.add_handler(CommandHandler("enableai", enable_ai))
+app.add_handler(CommandHandler("disableai", disable_ai))
 
 plugin_core.load_plugins(app)
 

@@ -75,7 +75,8 @@ See table for an explanation of what environment variables are needed/supported 
 ```
 project-root/
 ├── config/
-│   ├── config.json                  # Reminder times per user (JSON format)
+│   ├── user_config.json            # User config
+│   ├── plugin_config.json          # Plugin config data
 │   ├── audio/<user-id>/            # Voice notes organized by user ID
 │   └── transcriptions/<user-id>/   # Transcribed text files organized by user ID
 ├── styles/  
@@ -88,17 +89,21 @@ project-root/
 
 - `/setstyle <text>` – Set your diary writing style using a sample entry
 - `/getstyle` - Returns a users style to confirm your style
+- `/enableai` - Enables the AI processing of diary entries
+- `/disableai` - Disable the AI processing of diary entries
 - `/setreminder <HH:MM>` – Set your daily reminder time (bot's local time)
 - `/start` – Starter command
 
 ## 🛠 Configuration
 
-User reminder times are stored in `config/config.json`:
+Configuration is a model for each user. This is stored in `config/user_config.json`:
 
 ```json
 {
-  "123456789": "08:30",
-  "987654321": "21:00"
+  "123456778": {
+    "ai_enabled": true,
+    "reminder_time": "20:00"
+  }
 }
 ```
 

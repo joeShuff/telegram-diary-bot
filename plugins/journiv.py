@@ -1,7 +1,7 @@
 from dataclasses import dataclass, asdict, fields
 from typing import Optional, Dict, Any
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, Message, BotCommand
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackQueryHandler
 
 from plugin_core import BasePlugin
@@ -47,6 +47,11 @@ class JournivPlugin(BasePlugin):
         application.add_handler(CallbackQueryHandler(self.select_journal,
                                                      pattern="^journiv_select_"))
 
+    def load_commands(self) -> list[BotCommand]:
+        return [
+            BotCommand("journivsetup", "Command to configure your journiv connection")
+        ]
+
     def get_id(self):
         return "journiv"
 
@@ -73,6 +78,7 @@ class JournivPlugin(BasePlugin):
             entry_id = uploaded_entry["id"]
             journal_id = uploaded_entry["journal_id"]
 
+            # Upload voice note
             await upload_media(
                 base_url=stored_data.base_url,
                 access_token=stored_data.access_token,
