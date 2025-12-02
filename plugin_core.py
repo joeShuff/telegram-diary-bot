@@ -2,7 +2,7 @@ import inspect
 import json
 from pathlib import Path
 
-from telegram import Message
+from telegram import Message, BotCommand
 from telegram.ext import Application
 
 import importlib
@@ -31,12 +31,24 @@ class BasePlugin:
     def load_config(self, user_id: int) -> dict:
         return get_user_config(user_id, self.get_id())
 
+    def load_commands(self) -> list[BotCommand]:
+        return []
+
 
 PLUGIN_ENV = os.getenv("ENABLED_PLUGINS", "")  # e.g. "pluginone,plugintwo"
 ENABLED_PLUGIN_IDS = {p.strip() for p in PLUGIN_ENV.split(",") if p.strip()}
 
 plugins = []
 
+
+def get_loaded_plugin_commands() -> list[BotCommand]:
+    commands = []
+
+    for plugin in plugins:
+        for command in plugin.load_commands():
+            commands.append(command)
+
+    return commands
 
 def load_plugins(application: Application):
     global plugins
