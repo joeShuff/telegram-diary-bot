@@ -11,8 +11,8 @@ from plugins.journiv_api import load_journals, journiv_login, upload_journiv_ent
 @dataclass
 class JournivConfig:
     base_url: str
-    access_token: str
-    refresh_token: str
+    email: str
+    password: str
     journal_id: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -36,10 +36,23 @@ class JournivPlugin(BasePlugin):
     """
     Plugin functions
     """
+    def migrate_journiv_config(self, data: dict) -> dict:
+        # Old format detected
+        if "access_token" in data or "refresh_token" in data:
+            return {
+                "base_url": data["base_url"],
+                "email": "",
+                "password": "",
+                "journal_id": data.get("journal_id"),
+            }
+
+        # Already new format
+        return data
 
     def load_config(self, user_id: int) -> JournivConfig:
         dict = super().load_config(user_id)
-        return JournivConfig.from_dict(dict)
+        migrated_dict = self.migrate_journiv_config(dict)
+        return JournivConfig.from_dict(migrated_dict)
 
     def load(self, application: Application):
         """Registers commands and handlers."""
@@ -65,12 +78,11 @@ class JournivPlugin(BasePlugin):
         await source_message.reply_text("Processing with Journiv plugin…")
 
         try:
-            await self.refresh_token(source_message.chat.id)
-            stored_data = self.load_config(source_message.chat.id)
+            access_token = await journiv_login(stored_data.base_url, stored_data.email, stored_data.password)
 
             uploaded_entry = await upload_journiv_entry(
                 base_url=stored_data.base_url,
-                access_token=stored_data.access_token,
+                access_token=access_token,
                 journal_id=stored_data.journal_id,
                 content=diary_entry
             )
@@ -81,7 +93,7 @@ class JournivPlugin(BasePlugin):
             # Upload voice note
             await upload_media(
                 base_url=stored_data.base_url,
-                access_token=stored_data.access_token,
+                access_token=access_token,
                 file_path=voice_note_path,
                 entry_id=entry_id
             )
@@ -101,27 +113,6 @@ class JournivPlugin(BasePlugin):
         except Exception as e:
             await source_message.reply_text(f"Upload failed:\n{e}")
 
-    async def refresh_token(self, user_id):
-        """
-        This function loads the users config, performs the token refresh then stores the new tokens in the config
-        :param user_id: User ID to perform the refresh for
-        """
-        stored_config = self.load_config(user_id)
-
-        new_data = await journiv_refresh(
-            base_url=stored_config.base_url,
-            refresh_token=stored_config.refresh_token
-        )
-
-        new_config = JournivConfig(
-            base_url=stored_config.base_url,
-            access_token=new_data["access_token"],
-            refresh_token=stored_config.refresh_token,  # No new refresh token issued
-            journal_id=stored_config.journal_id
-        )
-
-        self.save_config(user_id, new_config.to_dict())
-
     """
     Setup Functions
     """
@@ -140,14 +131,14 @@ class JournivPlugin(BasePlugin):
 
         # Validate API
         try:
-            credentials = await journiv_login(base_url, email, password)
+            access_token = await journiv_login(base_url, email, password)
         except Exception as e:
             return await update.message.reply_text(str(e))
 
         config = JournivConfig(
             base_url=base_url,
-            access_token=credentials["access_token"],
-            refresh_token=credentials["refresh_token"],
+            email=email,
+            password=password,
             journal_id=""
         )
 
@@ -157,7 +148,7 @@ class JournivPlugin(BasePlugin):
         )
 
         try:
-            journals = await load_journals(config.base_url, config.access_token)
+            journals = await load_journals(config.base_url, access_token)
         except Exception as e:
             return await update.message.reply_text(str(e))
 
@@ -197,8 +188,8 @@ class JournivPlugin(BasePlugin):
 
         new_config = JournivConfig(
             base_url=stored_data.base_url,
-            access_token=stored_data.access_token,
-            refresh_token=stored_data.refresh_token,
+            email=stored_data.email,
+            password=stored_data.password,
             journal_id=journal_id
         )
 
