@@ -151,9 +151,10 @@ async def journiv_refresh(base_url: str, refresh_token: str):
     return data
 
 
-async def journiv_login(base_url: str, email: str, password: str):
+async def journiv_login(base_url: str, email: str, password: str) -> str:
     """
-    Attempt to log into Journiv and return tokens.
+    Attempt to log into Journiv and return access token.
+
     Raises ValueError on invalid credentials.
     Raises RuntimeError on unexpected server errors.
     """
@@ -189,10 +190,7 @@ async def journiv_login(base_url: str, email: str, password: str):
     if "access_token" not in data or "refresh_token" not in data:
         raise RuntimeError("Journiv login succeeded but tokens are missing.")
 
-    return {
-        "access_token": data["access_token"],
-        "refresh_token": data["refresh_token"]
-    }
+    return data["access_token"]
 
 
 async def upload_media(
