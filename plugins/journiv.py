@@ -121,7 +121,8 @@ class JournivPlugin(BasePlugin):
         args = context.args
         if len(args) < 3:
             await update.message.reply_text(
-                "Usage: /journivsetup <base_url> <email> <password>"
+                "Usage: /journivsetup <base_url> <email> <password>\n\nThis plugin stores your email/password as "
+                "Journiv lacks API tokens. Proceed with Caution. "
             )
             return
 
